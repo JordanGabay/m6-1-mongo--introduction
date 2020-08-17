@@ -4,9 +4,14 @@ const assert = require("assert");
 require("dotenv").config();
 const { MONGO_URI } = process.env;
 
-async function createGreeting(req, res) {
+const options = {
+  useNewUrlParse: true,
+  useUnifiedTopology: true,
+};
+
+const createGreeting = async (req, res) => {
   try {
-    const client = await MongoClient(MONGO_URI, { useUnifiedTopology: true });
+    const client = await MongoClient(MONGO_URI, options);
 
     await client.connect();
 
@@ -24,6 +29,23 @@ async function createGreeting(req, res) {
   } catch ({ message }) {
     res.status(500).json({ status: 500, message });
   }
-}
+};
 
-module.exports = { createGreeting };
+const getGreeting = async (req, res) => {
+  const { _id } = req.params;
+
+  const client = await MongoClient(MONGO_URI, options);
+
+  await client.connect();
+
+  const db = client.db("exercise_1");
+
+  db.collection("two").findOne({ _id }, (err, result) => {
+    result
+      ? res.status(200).json({ status: 200, _id, data: result })
+      : res.status(404).json({ status: 404, _id, data: "Not Found" });
+    client.close();
+  });
+};
+
+module.exports = { createGreeting, getGreeting };
