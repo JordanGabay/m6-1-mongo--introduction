@@ -4,7 +4,7 @@ require("dotenv").config();
 const {MONGO_URI} = process.env;
 
 const options = {
-    useNewUrlParse: true,
+    useNewUrlParser: true,
     useUnifiedTopology: true
 }
 

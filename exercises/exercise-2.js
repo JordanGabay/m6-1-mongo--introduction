@@ -5,7 +5,7 @@ require("dotenv").config();
 const { MONGO_URI } = process.env;
 
 const options = {
-  useNewUrlParse: true,
+  useNewUrlParser: true,
   useUnifiedTopology: true,
 };
 
@@ -33,6 +33,7 @@ const createGreeting = async (req, res) => {
 
 const getGreeting = async (req, res) => {
   const { _id } = req.params;
+  console.log('1', _id)
 
   const client = await MongoClient(MONGO_URI, options);
 
@@ -40,12 +41,39 @@ const getGreeting = async (req, res) => {
 
   const db = client.db("exercise_1");
 
-  db.collection("two").findOne({ _id }, (err, result) => {
+  db.collection("greetings").findOne({ _id }, (err, result) => {
     result
       ? res.status(200).json({ status: 200, _id, data: result })
-      : res.status(404).json({ status: 404, _id, data: "Not Found" });
+      : res.status(404).json({ status: 404, _id, data: err.message });
     client.close();
   });
 };
 
-module.exports = { createGreeting, getGreeting };
+const getGreetings = async (req, res) => {
+  const client = await MongoClient(MONGO_URI, options);
+  try {
+    await client.connect();
+
+    const db = client.db("exercise_1");
+
+    const start = Number(req.query.start);
+    const limit = Number(req.query.limit);
+
+    const greetings = await db.collection("greetings").find().toArray();
+    if (greetings.length > 25) {
+      if ((start || start === 0) && limit) {
+        res.status(200).json(greetings.slice(start, start + limit));
+      } else {
+        res.status(200).json(greetings.slice(0, 25));
+      }
+    } else {
+      res.status(200).json(greetings);
+    }
+  } catch (err) {
+    console.log(err.stack);
+    res.status(400).json("Not found");
+  }
+  client.close();
+};
+
+module.exports = { createGreeting, getGreeting, getGreetings };
