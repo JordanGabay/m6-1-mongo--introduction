@@ -91,6 +91,33 @@ const deleteGreeting = async (req, res) => {
         console.log(err.stack);
         res.status(500).json({status: 500, data: req.body, message: err.message})
     }
+    client.close();
 }
 
-module.exports = { createGreeting, getGreeting, getGreetings, deleteGreeting };
+const updateGreeting = async (req,res) => {
+    const {_id} = req.params;
+
+    const client = await MongoClient(MONGO_URI, options);
+
+    try {
+        await client.connect();
+        const db = client.db("exercise_1");
+        const newValues = {$set: {hello: req.body.hello} };
+        //console.log(req.body.hello);
+
+        if (req.body.hello === undefined) {
+            throw new Error("you need to enter a greeting")
+        }
+
+        const r = await db.collection("greetings").updateOne({_id}, newValues)
+        assert.equal(1, r.matchedCount);
+        assert.equal(1, r.modifiedCount);
+        res.status(200).json({status: 200, data: {...req.body} })
+    } catch (err) {
+        console.log(err.stack)
+        res.status(500).json({status: 500, data: {...req.body}, message: err.message})
+    }
+    client.close();
+}
+
+module.exports = { createGreeting, getGreeting, getGreetings, deleteGreeting, updateGreeting };
